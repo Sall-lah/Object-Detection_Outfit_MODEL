@@ -1,7 +1,0 @@
-{
-  "items": [
-    {"id": 1, "name": "Coca Cola", "label": "coke"},
-    {"id": 2, "name": "Pepsi", "label": "pepsi"},
-    {"id": 3, "name": "Sprite", "label": "sprite"}
-  ]
-}
