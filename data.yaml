@@ -1,4 +1,0 @@
-train: dataset/images/train
-val: dataset/images/val
-nc: 10
-names: ['sunglass', 'hat', 'jacket', 'shirt', 'pants', 'shorts', 'skirt', 'dress', 'bag', 'shoe']
