@@ -1,13 +1,13 @@
 from ultralytics import YOLO
 import cv2
+import numpy as np
 
-# Load your trained model
-model = YOLO("runs/detect/train6/weights/best.pt")  # or yolov8n_gray.pt
+# Load your two models
+model_gray = YOLO("final/final3_gray/weights/best.pt")   # trained on grayscale
+model_style = YOLO("final/final4_style/weights/best.pt")       # trained on color (or another model)
 
-# Open webcam (0 = default camera)
+# Open webcam
 cap = cv2.VideoCapture(0)
-
-# Optional: set resolution
 cap.set(3, 640)
 cap.set(4, 480)
 
@@ -16,32 +16,44 @@ while True:
     if not ret:
         break
 
-    # Convert frame to grayscale for detection
+    # --- Prepare grayscale version for gray model ---
     gray_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+    gray_frame = cv2.cvtColor(gray_frame, cv2.COLOR_GRAY2BGR)  # 3 channels
 
-    # Run YOLOv8 inference
-    results = model(frame, stream=True)
+    # --- Run both models ---
+    results_gray = model_gray(gray_frame, stream=True)
+    results_style = model_style(frame, stream=True)
 
-    # Loop over results and draw boxes
-    for r in results:
-        boxes = r.boxes
-        for box in boxes:
-            # Get coordinates
-            x1, y1, x2, y2 = box.xyxy[0]
-            x1, y1, x2, y2 = int(x1), int(y1), int(x2), int(y2)
+    # --- Copy frames for display ---
+    display_gray = gray_frame.copy()
+    display_style = frame.copy()
 
-            # Get class name
-            cls = int(box.cls[0])
+    # Draw results for grayscale model (green boxes)
+    for r in results_gray:
+        for box in r.boxes:
+            x1, y1, x2, y2 = map(int, box.xyxy[0])
             conf = float(box.conf[0])
-            name = model.names[cls]
+            cls = int(box.cls[0])
+            label = model_gray.names[cls]
+            cv2.rectangle(display_gray, (x1, y1), (x2, y2), (0,255,0), 2)
+            cv2.putText(display_gray, f"{label} {conf:.2f}", (x1, y1-10),
+                        cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0,255,0), 2)
 
-            # Draw rectangle and label
-            cv2.rectangle(frame, (x1, y1), (x2, y2), (0, 255, 0), 2)
-            cv2.putText(frame, f"{name} {conf:.2f}", (x1, y1 - 10),
-                        cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 255, 0), 2)
+    # Draw results for color model (blue boxes)
+    for r in results_style:
+        for box in r.boxes:
+            x1, y1, x2, y2 = map(int, box.xyxy[0])
+            conf = float(box.conf[0])
+            cls = int(box.cls[0])
+            label = model_style.names[cls]
+            cv2.rectangle(display_style, (x1, y1), (x2, y2), (255,0,0), 2)
+            cv2.putText(display_style, f"{label} {conf:.2f}", (x1, y1-10),
+                        cv2.FONT_HERSHEY_SIMPLEX, 0.6, (255,0,0), 2)
 
-    # Show on screen
-    cv2.imshow("Outfit-Invetory-Detection-Model", frame)
+    # --- Combine both displays side by side ---
+    combined = np.hstack((display_gray, display_style))
+
+    cv2.imshow("Gray YOLO (Left) | Color YOLO (Right)", combined)
 
     # Press 'q' to quit
     if cv2.waitKey(1) & 0xFF == ord('q'):
