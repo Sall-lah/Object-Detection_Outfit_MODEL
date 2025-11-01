@@ -1,0 +1,75 @@
+#:kivy 2.2.0
+
+ScreenManagement:
+    HomeScreen:
+    CameraScreen:
+    ResultScreen:
+
+<HomeScreen>:
+    name: "home"
+    BoxLayout:
+        orientation: "vertical"
+        spacing: 10
+        padding: 20
+
+        Label:
+            text: "🏠 Home Page"
+            font_size: "24sp"
+
+        Button:
+            text: "Go to Camera"
+            size_hint_y: None
+            height: 50
+            on_press: app.root.current = "camera"
+
+<CameraScreen>:
+    name: "camera"
+    BoxLayout:
+        orientation: "vertical"
+        spacing: 10
+        padding: 20
+
+        Label:
+            text: "📸 Camera Page"
+            font_size: "24sp"
+
+        Button:
+            text: "Capture"
+            size_hint_y: None
+            height: 50
+            on_press: root.capture()
+
+        Button:
+            text: "Show Results"
+            size_hint_y: None
+            height: 50
+            on_press: app.root.current = "result"
+
+        Button:
+            text: "Back to Home"
+            size_hint_y: None
+            height: 50
+            on_press: app.root.current = "home"
+
+<ResultScreen>:
+    name: "result"
+    BoxLayout:
+        orientation: "vertical"
+        spacing: 10
+        padding: 20
+
+        Label:
+            text: "📊 Result Page"
+            font_size: "24sp"
+
+        Button:
+            text: "Back to Camera"
+            size_hint_y: None
+            height: 50
+            on_press: app.root.current = "camera"
+
+        Button:
+            text: "Back to Home"
+            size_hint_y: None
+            height: 50
+            on_press: app.root.current = "home"
