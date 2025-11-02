@@ -13,7 +13,7 @@ ScreenManagement:
         padding: 20
 
         Label:
-            text: "🏠 Home Page"
+            text: "Home Page"
             font_size: "24sp"
 
         Button:
@@ -22,6 +22,12 @@ ScreenManagement:
             height: 50
             on_press: app.root.current = "camera"
 
+        Button:
+            text: "Exit"
+            size_hint_y: None
+            height: 50
+            on_press: app.stop()
+
 <CameraScreen>:
     name: "camera"
     BoxLayout:
@@ -29,8 +35,14 @@ ScreenManagement:
         spacing: 10
         padding: 20
 
+        Camera:
+            id: camera_view
+            index: 0
+            resolution: (640, 480)
+            play: False
+
         Label:
-            text: "📸 Camera Page"
+            text: "Camera Page"
             font_size: "24sp"
 
         Button:
@@ -59,8 +71,20 @@ ScreenManagement:
         padding: 20
 
         Label:
-            text: "📊 Result Page"
+            text: "Result Page"
             font_size: "24sp"
+
+        ScrollView:
+            do_scroll_x: False
+            do_scroll_y: True
+
+            GridLayout:
+                id: image_grid
+                cols: 2
+                spacing: 10
+                padding: 10
+                size_hint_y: None
+                height: self.minimum_height
 
         Button:
             text: "Back to Camera"
