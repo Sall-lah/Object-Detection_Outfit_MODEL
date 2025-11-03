@@ -10,8 +10,7 @@ def rgb_to_name(rgb_color):
     import webcolors
     from collections import namedtuple
 
-    # Convert BGR → RGB
-    r, g, b = int(rgb_color[2]), int(rgb_color[1]), int(rgb_color[0])
+    r, g, b = int(rgb_color[0]), int(rgb_color[1]), int(rgb_color[2])
 
     # Try exact color name first
     try:
@@ -49,13 +48,17 @@ def rgb_to_name(rgb_color):
 model = YOLO("final/final3_gray/weights/best.pt")  # change to your trained model
 
 # Read the image
-image_path = "test/tung.jpg"  # change to your image
-frame = cv2.imread(image_path)
-if frame is None:
+image_path = "test/image.png"  # change to your image
+frame_color = cv2.imread(image_path)
+
+if frame_color is None:
     raise FileNotFoundError("Image not found!")
 
+gray_frame = cv2.cvtColor(frame_color, cv2.COLOR_BGR2GRAY)
+gray_frame = cv2.cvtColor(gray_frame, cv2.COLOR_GRAY2BGR)
+
 # Run YOLO detection 
-results = model(frame)
+results = model(gray_frame)
 
 # Find the box with the highest confidence 
 best_box = None
@@ -73,13 +76,13 @@ for r in results:
 # Crop the detected region 
 if best_box is not None:
     x1, y1, x2, y2 = map(int, best_box.xyxy[0])
-    cropped = frame[y1:y2, x1:x2]
+    crop_color = frame_color[y1:y2, x1:x2]
 
-    # Convert to RGB for KMeans
-    cropped_rgb = cv2.cvtColor(cropped, cv2.COLOR_BGR2RGB)
+    # # Convert to RGB for K-Means
+    crop_rgb = cv2.cvtColor(crop_color, cv2.COLOR_BGR2RGB)
 
     # Run K-Means
-    pixels = cropped_rgb.reshape(-1, 3)
+    pixels = crop_rgb.reshape(-1, 3)
     kmeans = KMeans(n_clusters=3, random_state=0)
     kmeans.fit(pixels)
 
@@ -95,7 +98,7 @@ if best_box is not None:
     # Display Result
     plt.figure(figsize=(10,5))
     plt.subplot(1,2,1)
-    plt.imshow(cv2.cvtColor(cropped, cv2.COLOR_BGR2RGB))
+    plt.imshow(cv2.cvtColor(crop_color, cv2.COLOR_BGR2RGB))
     plt.title(f"Detected Object: {model.names[best_cls]}")
     plt.axis("off")
 
