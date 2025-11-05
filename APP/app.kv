@@ -3,6 +3,8 @@
 ScreenManagement:
     HomeScreen:
     CameraScreen:
+    WarnClothes:
+    ConfirmNewClothes:
     ResultScreen:
 
 <HomeScreen>:
@@ -62,6 +64,59 @@ ScreenManagement:
             size_hint_y: None
             height: 50
             on_press: app.root.current = "home"
+
+<WarnClothes>:
+    name: "warn"
+    BoxLayout:
+        orientation: "vertical"
+        spacing: 10
+        padding: 20
+
+        Label:
+            id: clothesDetail
+            text: "This Clothes already exists in your inventory"
+            font_size: "24sp"
+
+        Button:
+            text: "Capture Again"
+            size_hint_y: None
+            height: 50
+            on_press: app.root.current = "camera"
+        Button:
+            text: "Back to Home"
+            size_hint_y: None
+            height: 50
+            on_press: app.root.current = "home"
+
+<ConfirmNewClothes>:
+    name: "confirm"
+    BoxLayout:
+        orientation: "vertical"
+        spacing: 10
+        padding: 20
+
+        Label:
+            id: clothesDetail
+            text: "Loading text..."
+            font_size: "24sp"
+
+        Button:
+            text: "Save Clothes"
+            size_hint_y: None
+            height: 50
+            on_press: root.saveImage()
+
+        Button:
+            text: "Capture Again"
+            size_hint_y: None
+            height: 50
+            on_press: app.root.current = "camera"
+        Button:
+            text: "Back to Home"
+            size_hint_y: None
+            height: 50
+            on_press: app.root.current = "home"
+
 
 <ResultScreen>:
     name: "result"

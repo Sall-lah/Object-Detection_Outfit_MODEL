@@ -9,43 +9,31 @@ import matplotlib.pyplot as plt
 def rgb_to_name(rgb_color):
     r, g, b = int(rgb_color[0]), int(rgb_color[1]), int(rgb_color[2])
 
-    # Try exact color name first
-    try:
-        return webcolors.rgb_to_name((r, g, b))
-    except ValueError:
-        # Build fallback color dictionary (covers all versions)
-        try:
-            color_dict = webcolors.CSS3_NAMES_TO_HEX
-        except AttributeError:
-            # Older or newer versions expose names differently
-            try:
-                color_dict = webcolors._definitions._CSS3_NAMES_TO_HEX
-            except Exception:
-                # Manual minimal fallback
-                color_dict = {
-                    'black': '#000000', 'white': '#ffffff', 'red': '#ff0000',
-                    'green': '#008000', 'blue': '#0000ff', 'yellow': '#ffff00',
-                    'cyan': '#00ffff', 'magenta': '#ff00ff', 'gray': '#808080'
-                }
+    color_dict = {
+        "red": "#FF0000", "green": "#00FF00", "blue": "#0000FF", "yellow": "#FFFF00", 
+        "cyan": "#00FFFF", "magenta": "#FF00FF", "black": "#000000", "white": "#FFFFFF", 
+        "gray": "#808080", "orange": "#FFA500", "purple": "#800080", "pink": "#FFC0CB", 
+        "brown": "#A52A2A"
+    }
 
-        # Find the closest match
-        min_diff = float('inf')
-        closest_name = "unknown"
-        for name, hex_val in color_dict.items():
-            rc, gc, bc = webcolors.hex_to_rgb(hex_val)
-            diff = (r - rc) ** 2 + (g - gc) ** 2 + (b - bc) ** 2
-            if diff < min_diff:
-                min_diff = diff
-                closest_name = name
+    # Find the closest match
+    min_diff = float('inf')
+    closest_name = "unknown"
+    for name, hex_val in color_dict.items():
+        rc, gc, bc = webcolors.hex_to_rgb(hex_val)
+        diff = (r - rc) ** 2 + (g - gc) ** 2 + (b - bc) ** 2
+        if diff < min_diff:
+            min_diff = diff
+            closest_name = name
 
-        return closest_name
+    return closest_name
 
 
 # Load YOLO model
 model = YOLO("utils/best.pt")  # change to your trained model
 
 # Read the image
-image_path = "img_list/test.jpg"  # change to your image
+image_path = "img_list/test100.jpg"  # change to your image
 frame_color = cv2.imread(image_path)
 
 if frame_color is None:

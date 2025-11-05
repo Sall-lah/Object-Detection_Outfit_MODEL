@@ -7,9 +7,6 @@ import matplotlib.pyplot as plt
 
 # Helper: find nearest color name
 def rgb_to_name(rgb_color):
-    import webcolors
-    from collections import namedtuple
-
     r, g, b = int(rgb_color[0]), int(rgb_color[1]), int(rgb_color[2])
 
     # Try exact color name first
@@ -48,7 +45,7 @@ def rgb_to_name(rgb_color):
 model = YOLO("final/final3_gray/weights/best.pt")  # change to your trained model
 
 # Read the image
-image_path = "test/image.png"  # change to your image
+image_path = "test/7DbG6Kt.jpeg"  # change to your image
 frame_color = cv2.imread(image_path)
 
 if frame_color is None:
