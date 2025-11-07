@@ -1,6 +1,8 @@
 import os
 from kivy.app import App
 from kivy.uix.image import Image
+from kivy.uix.label import Label
+from kivy.uix.boxlayout import BoxLayout
 from kivy.uix.screenmanager import ScreenManager, Screen
 from kivy.lang import Builder
 from kivy.core.window import Window
@@ -91,8 +93,14 @@ class ResultScreen(Screen):
         for filename in os.listdir(folder_path):
             if filename.lower().endswith(('.png', '.jpg', '.jpeg')):
                 img_path = os.path.join(folder_path, filename)
+
+                item = BoxLayout(orientation='vertical')
+                item.spacing = 10
                 img_widget = Image(source=img_path, size_hint_y=None, height=200)
-                grid.add_widget(img_widget)
+                img_label = Label(text=filename)
+                item.add_widget(img_widget)
+                item.add_widget(img_label)
+                grid.add_widget(item)
     
     def on_pre_enter(self):
         # Reload gallery every time you enter
