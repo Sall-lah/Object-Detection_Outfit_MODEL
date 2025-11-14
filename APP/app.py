@@ -97,7 +97,7 @@ class ResultScreen(Screen):
                 item = BoxLayout(orientation='vertical')
                 item.spacing = 10
                 img_widget = Image(source=img_path, size_hint_y=None, height=200)
-                img_label = Label(text=filename)
+                img_label = Label(text=filename.split('.')[0])
                 item.add_widget(img_widget)
                 item.add_widget(img_label)
                 grid.add_widget(item)

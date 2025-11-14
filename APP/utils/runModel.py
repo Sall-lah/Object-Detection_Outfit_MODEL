@@ -1,8 +1,8 @@
 from ultralytics import YOLO
 import cv2
 import numpy as np
-from sklearn.cluster import KMeans
 import webcolors
+# from sklearn.cluster import KMeans
 
 # Helper: find nearest color name
 def rgb_to_name(rgb_color):
@@ -27,6 +27,41 @@ def rgb_to_name(rgb_color):
 
     return closest_name
 
+# KMeans Function
+class KMeans:
+    def __init__(self, k=3, batch_size=32, max_iter=100):
+        self.k = k
+        self.batch_size = batch_size
+        self.max_iter = max_iter
+
+    def fit(self, X):
+        n = len(X)
+
+        # initialize centroids
+        idx = np.random.choice(n, self.k, replace=False)
+        self.centroids = X[idx]
+
+        for _ in range(self.max_iter):
+            # pick random batch
+            batch_idx = np.random.choice(n, self.batch_size, replace=False)
+            batch = X[batch_idx]
+
+            # compute distances
+            distances = np.linalg.norm(batch[:, None] - self.centroids, axis=2)
+            labels = np.argmin(distances, axis=1)
+
+            # update centroids on this batch
+            for j in range(self.k):
+                if np.any(labels == j):
+                    self.centroids[j] = batch[labels == j].mean(axis=0)
+
+        # Compute final labels
+        distances_full = np.linalg.norm(X[:, None] - self.centroids, axis=2)
+        self.labels_ = np.argmin(distances_full, axis=1)
+
+        return self
+
+# Main Detection Fucntion
 def detect(frame_color):
     # Load YOLO model
     model = YOLO("utils/best.pt")  # change to your trained model
@@ -66,12 +101,13 @@ def detect(frame_color):
 
         # Run K-Means
         pixels = crop_rgb.reshape(-1, 3)
-        kmeans = KMeans(n_clusters=3, random_state=0)
+        kmeans = KMeans()
         kmeans.fit(pixels)
 
-        colors = np.array(kmeans.cluster_centers_, dtype='uint8')
+        colors = np.array(kmeans.centroids, dtype='uint8')
         labels, counts = np.unique(kmeans.labels_, return_counts=True)
         dominant_color = colors[np.argmax(counts)]
+        print(dominant_color, labels);
 
         # Get color name 
         color_name = rgb_to_name(dominant_color)

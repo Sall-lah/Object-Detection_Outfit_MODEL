@@ -1,9 +1,43 @@
 from ultralytics import YOLO
 import cv2
 import numpy as np
-from sklearn.cluster import KMeans
+# from sklearn.cluster import KMeans
 import webcolors
 import matplotlib.pyplot as plt
+
+# KMeans Function
+class KMeans:
+    def __init__(self, k=3, batch_size=32, max_iter=100):
+        self.k = k
+        self.batch_size = batch_size
+        self.max_iter = max_iter
+
+    def fit(self, X):
+        n = len(X)
+
+        # initialize centroids
+        idx = np.random.choice(n, self.k, replace=False)
+        self.centroids = X[idx]
+
+        for _ in range(self.max_iter):
+            # pick random batch
+            batch_idx = np.random.choice(n, self.batch_size, replace=False)
+            batch = X[batch_idx]
+
+            # compute distances
+            distances = np.linalg.norm(batch[:, None] - self.centroids, axis=2)
+            labels = np.argmin(distances, axis=1)
+
+            # update centroids on this batch
+            for j in range(self.k):
+                if np.any(labels == j):
+                    self.centroids[j] = batch[labels == j].mean(axis=0)
+
+        # Compute final labels
+        distances_full = np.linalg.norm(X[:, None] - self.centroids, axis=2)
+        self.labels_ = np.argmin(distances_full, axis=1)
+
+        return self
 
 # Helper: find nearest color name
 def rgb_to_name(rgb_color):
@@ -33,7 +67,7 @@ def rgb_to_name(rgb_color):
 model = YOLO("utils/best.pt")  # change to your trained model
 
 # Read the image
-image_path = "img_list/test100.jpg"  # change to your image
+image_path = "img_list/test.jpeg"  # change to your image
 frame_color = cv2.imread(image_path)
 
 if frame_color is None:
@@ -68,10 +102,10 @@ if best_box is not None:
 
     # Run K-Means
     pixels = crop_rgb.reshape(-1, 3)
-    kmeans = KMeans(n_clusters=3, random_state=0)
+    kmeans = KMeans()
     kmeans.fit(pixels)
 
-    colors = np.array(kmeans.cluster_centers_, dtype='uint8')
+    colors = np.array(kmeans.centroids, dtype='uint8')
     labels, counts = np.unique(kmeans.labels_, return_counts=True)
     dominant_color = colors[np.argmax(counts)]
 
