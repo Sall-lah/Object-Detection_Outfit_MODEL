@@ -15,7 +15,7 @@ output_details = interpreter.get_output_details()
 
 
 # Load and preprocess image
-img = cv2.imread("img_list/tshirt_gray")
+img = cv2.imread("img_list/image.png")
 
 # grayscale → expand to RGB
 if len(img.shape) == 2 or img.shape[2] == 1:
