@@ -9,7 +9,7 @@ from kivy.core.window import Window
 from kivy.clock import Clock
 import numpy as np
 import cv2
-import time
+import requests
 
 from utils import runModel
 
@@ -33,35 +33,55 @@ class CameraScreen(Screen):
         camera = self.ids.camera_view
         # Get the texture (current frame)
         texture = camera.texture
-        size = texture.size  # (width, height)
-
+        if not texture:
+            print("No texture yet")
+            return
+        
+        w,h = texture.size  # (width, height)
+    
         # Get raw RGBA pixel data
         pixels = texture.pixels
 
         # Convert to NumPy array
         img = np.frombuffer(pixels, dtype=np.uint8)
-        img = img.reshape(size[1], size[0], 4)  # Kivy uses RGBA format
+        img = img.reshape(h, w, 4)  # Kivy uses RGBA format
 
         # Convert RGBA → BGR for OpenCV
         img_bgr = cv2.cvtColor(img, cv2.COLOR_RGBA2BGR)
 
-        # Detect clothes and clothes color from image
-        image, name, color_name = runModel.detect(img_bgr);
+        # Encode to JPEG in memory
+        success, jpeg_bytes = cv2.imencode(".jpg", img_bgr)
+        if not success:
+            print("Failed to encode image!")
+            return
+        image_bytes = jpeg_bytes.tobytes()
 
-        # Save
-        if os.path.exists(f'img_list/{name}_{color_name}.jpg'):
-            self.manager.current = "warn"
-        else:
-            print("Screens available:", [s.name for s in self.manager.screens])
-            # Kirim data ke screen selanjutnya
-            self.manager.get_screen("confirm").recive_data(name, color_name, image)
-            # Pindahkan screen
-            self.manager.current = "confirm"
+        # Detect clothes and clothes color from image(API CALL post then send image_byte)
+        url = "http://YOUR_DJANGO_SERVER/upload/"
+        files = {
+            "image": ("camera.jpg", image_bytes, "image/jpeg")
+        }
+        r = requests.post(url, files=files)
+        print("Response:\n" ,r.json())
+
+        # Save di Android
+        # # Save
+        # if os.path.exists(f'img_list/{name}_{color_name}.jpg'):
+        #     self.manager.current = "warn"
+        # else:
+        #     print("Screens available:", [s.name for s in self.manager.screens])
+        #     # Kirim data ke screen selanjutnya
+        #     self.manager.get_screen("confirm").recive_data(name, color_name, image)
+        #     # Pindahkan screen
+        #     self.manager.current = "confirm"
 
 # Display if clothes already exist in inventory
 class WarnClothes(Screen):
     pass
 
+# a Clothes and Pants reccomendation screen
+class RecommendationScreen(Screen):
+    pass
 # Confirm to save your new clothes
 class ConfirmNewClothes(Screen):
     clothes_name = ""
