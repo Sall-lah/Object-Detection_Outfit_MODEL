@@ -4,6 +4,7 @@ from kivy.uix.image import Image
 from kivy.uix.label import Label
 from kivy.uix.boxlayout import BoxLayout
 from kivy.uix.screenmanager import ScreenManager, Screen
+from kivy.properties import StringProperty, ListProperty
 from kivy.lang import Builder
 from kivy.core.window import Window
 from kivy.clock import Clock
@@ -11,7 +12,8 @@ import numpy as np
 import cv2
 import requests
 
-from utils import runModel
+from utils.reccomend import recommend
+from utils.parseImage import scan_folder
 
 # Optional: Set a fixed window size for desktop testing
 Window.size = (360, 640)
@@ -79,9 +81,6 @@ class CameraScreen(Screen):
 class WarnClothes(Screen):
     pass
 
-# a Clothes and Pants reccomendation screen
-class RecommendationScreen(Screen):
-    pass
 # Confirm to save your new clothes
 class ConfirmNewClothes(Screen):
     clothes_name = ""
@@ -125,6 +124,29 @@ class ResultScreen(Screen):
     def on_pre_enter(self):
         # Reload gallery every time you enter
         self.load_images()
+
+class RecommendScreen(Screen):
+    def on_pre_enter(self):
+        data = scan_folder("img_list")
+        self.ids.spinner.values = [f"{item} {color}" for item, color in data]
+        
+
+    def on_selected(self, value):
+        self.ids.spinner.text = value
+
+    def go_next(self):
+        result = self.manager.get_screen("result_recommend")
+        spinner_value = self.ids.spinner.text
+        clothes_type, clothes_color = spinner_value.split(" ")
+        item_list = self.ids.spinner.values
+        result.recive_data(clothes_type, clothes_color, item_list)
+        self.manager.current = "result_recommend"
+
+class RecommendResultScreen(Screen):
+    def recive_data(self, clothes_type, clothes_color, item_list):
+        recommend_result = recommend(clothes_type, clothes_color, item_list)
+        self.ids.recommend_label.text = recommend_result[0];
+
 
 # Define Screen Manager
 class ScreenManagement(ScreenManager):

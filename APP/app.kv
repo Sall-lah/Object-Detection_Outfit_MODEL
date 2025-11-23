@@ -6,6 +6,8 @@ ScreenManagement:
     WarnClothes:
     ConfirmNewClothes:
     ResultScreen:
+    RecommendScreen:
+    RecommendResultScreen:
 
 <HomeScreen>:
     name: "home"
@@ -29,6 +31,12 @@ ScreenManagement:
             size_hint_y: None
             height: 50
             on_press: app.stop()
+
+        Button:
+            text: "Reccomend"
+            size_hint_y: None
+            height: 50
+            on_press: app.root.current = "reccomend"
 
 <CameraScreen>:
     name: "camera"
@@ -88,28 +96,7 @@ ScreenManagement:
             height: 50
             on_press: app.root.current = "home"
 
-<RecommendationScreen>:
-    name: "reccomend"
-    BoxLayout:
-        orientation: "vertical"
-        spacing: 10
-        padding: 20
 
-        # Label:
-        #     id: clothesDetail
-        #     text: "You already has that clothes"
-        #     font_size: "24sp"
-
-        # Button:
-        #     text: "Capture Again"
-        #     size_hint_y: None
-        #     height: 50
-        #     on_press: app.root.current = "camera"
-        # Button:
-        #     text: "Back to Home"
-        #     size_hint_y: None
-        #     height: 50
-        #     on_press: app.root.current = "home"
 
 <ConfirmNewClothes>:
     name: "confirm"
@@ -175,4 +162,51 @@ ScreenManagement:
             text: "Back to Home"
             size_hint_y: None
             height: 50
+            on_press: app.root.current = "home"
+
+<RecommendScreen>:
+    name: "reccomend"
+    BoxLayout:
+        orientation: "vertical"
+        spacing: 10
+        padding: 20
+
+        Label:
+            text: "Pick Your Outfit"
+            font_size: 28
+
+        Spinner:
+            id: spinner
+            text: "Select Type"
+            values: ["Hoodie", "T-Shirt", "Shirt", "Jacket"]
+            size_hint: (1, None)
+            height: "40dp"
+            on_text: root.on_selected(self.text)
+
+        Button:
+            text: "Next"
+            size_hint_y: None
+            height: dp(50)
+            on_press: root.go_next()
+
+<RecommendResultScreen>:
+    name: "result_recommend"
+    BoxLayout:
+        orientation: "vertical"
+        padding: 20
+        spacing: 20
+
+        Label:
+            text: "Best Reccomendation:"
+            font_size: 28
+
+        Label:
+            id: recommend_label
+            text: "Loading"
+            font_size: 28
+
+        Button:
+            text: "Home"
+            size_hint_y: None
+            height: dp(50)
             on_press: app.root.current = "home"

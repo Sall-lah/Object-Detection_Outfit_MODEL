@@ -11,6 +11,20 @@ COLORS = [
     "gray", "orange", "purple", "pink", "brown"
     ]
 
+TYPE_TOPS = [
+    "hoodie", "jacket", "shirt", "coat",
+    "sweat", "tshirt", "m2m", "plain", "mid-lenght dress", "dress",
+]
+
+TYPE_BOTTOMS = [
+    "pants", "jean", "short", "shorts",
+    "skirt", "slacks", "tracksuit"
+]
+
+TYPE_OTHERS = [
+    "fabric", "suit", "tie"
+]
+
 # Loop type and color and create a dictionary
 TYPE_INDEX  = {t:i for i,t in enumerate(TYPES)}
 COLOR_INDEX = {c:i for i,c in enumerate(COLORS)}
@@ -35,10 +49,27 @@ def embed(type_name, color_name):
 def cos(a, b):
     return float(np.dot(a,b) / (np.linalg.norm(a)*np.linalg.norm(b) + 1e-10))
 
-def recommend(item_type, item_color, BOTTOMS, TOPS):
+def split_item(item_list):
+    items = [t.split(" ") for t in item_list]
+
+    TOPS = []
+    BOTTOMS = []
+    
+    for t,c in items:
+        if t in TYPE_TOPS:
+            TOPS.append((t,c))
+        elif t in TYPE_BOTTOMS:
+            BOTTOMS.append((t,c))
+        else:
+            continue
+
+    return [TOPS, BOTTOMS]
+
+def recommend(item_type, item_color, item_list):
+    TOPS, BOTTOMS = split_item(item_list);
     query = embed(item_type, item_color)
 
-    if item_type in [t for t,_ in TOPS]:
+    if item_type in [t for t,c in TOPS]:
         # user picked TOP → recommend BOTTOM
         candidates = BOTTOMS
     else:
@@ -46,6 +77,9 @@ def recommend(item_type, item_color, BOTTOMS, TOPS):
         candidates = TOPS
 
     scored = []
+    if(candidates == []):
+       return ["No matching items found"]
+
     for t,c in candidates:
         score = cos(query, embed(t,c))
         scored.append(((t,c), score))
