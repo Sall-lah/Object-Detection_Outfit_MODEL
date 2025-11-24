@@ -1,29 +1,36 @@
 FROM python:3.10
 
-# Set the working directory inside the container
+ENV PYTHONDONTWRITEBYTECODE=1
+ENV PYTHONUNBUFFERED=1
+
+# Working directory for the Django API
 WORKDIR /app
 
-# Copy only requirements first (for caching)
-COPY API/requirements.txt .
+# Copy requirements first for caching
+COPY API/requirements.txt /app/
 
-# Install system dependencies needed by OpenCV + YOLO
+# Install system dependencies needed for OpenCV & YOLO
 RUN apt-get update && apt-get install -y \
+    libgl1 \
     libglib2.0-0 \
     libgl1-mesa-glx \
-    libopencv-dev \
+    libjpeg-dev \
+    zlib1g-dev \
+    libwebp-dev \
     && rm -rf /var/lib/apt/lists/*
 
-# Install Python dependencies
+# Install all python dependencies
+RUN pip install --upgrade pip
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Copy the Django API source code
-COPY API/ .
+# Copy the entire API folder into the container
+COPY API/ /app/
 
 # Expose Django port
 EXPOSE 8000
 
-# Collect static files (optional but recommended)
-RUN python manage.py collectstatic --noinput
+# Collect static files (safe even if you don't use static)
+RUN python manage.py collectstatic --noinput || true
 
-# Start Django using Gunicorn (production)
-CMD ["gunicorn", "projectname.wsgi:application", "--bind", "0.0.0.0:8000"]
+# Run Django using Gunicorn
+CMD ["gunicorn", "API.wsgi:application", "--bind", "0.0.0.0:8000"]
