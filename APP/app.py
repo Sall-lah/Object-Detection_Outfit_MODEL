@@ -4,7 +4,7 @@ from kivy.uix.image import Image
 from kivy.uix.label import Label
 from kivy.uix.boxlayout import BoxLayout
 from kivy.uix.screenmanager import ScreenManager, Screen
-from kivy.properties import StringProperty, ListProperty
+from kivy.properties import StringProperty
 from kivy.lang import Builder
 from kivy.core.window import Window
 from kivy.clock import Clock
@@ -59,7 +59,7 @@ class CameraScreen(Screen):
         image_bytes = jpeg_bytes.tobytes()
 
         # Detect clothes and clothes color from image(API CALL post then send image_byte)
-        url = "http://YOUR_DJANGO_SERVER/upload/"
+        url = "http://127.0.0.1:8000/api/scan/"
         files = {
             "image": ("camera.jpg", image_bytes, "image/jpeg")
         }
@@ -83,8 +83,8 @@ class WarnClothes(Screen):
 
 # Confirm to save your new clothes
 class ConfirmNewClothes(Screen):
-    clothes_name = ""
-    clothes_color = ""
+    clothes_name = StringProperty("")
+    clothes_color = StringProperty("")
     clothes_image = None
 
     def recive_data(self, name, color_name, image):

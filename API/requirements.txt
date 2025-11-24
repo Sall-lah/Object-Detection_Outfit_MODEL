@@ -1,0 +1,6 @@
+Django
+gunicorn
+numpy
+opencv-python-headless
+ultralytics
+webcolors
