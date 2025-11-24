@@ -13,7 +13,7 @@ COPY API/requirements.txt /app/
 RUN apt-get update && apt-get install -y \
     libgl1 \
     libglib2.0-0 \
-    libgl1-mesa-glx \
+    libgl1-mesa-dri \
     libjpeg-dev \
     zlib1g-dev \
     libwebp-dev \
