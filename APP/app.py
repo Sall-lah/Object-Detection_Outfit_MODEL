@@ -44,7 +44,8 @@ class CameraScreen(Screen):
         image_bytes = buffer.getvalue()
 
         # Send to your API
-        url = "https://object-detectionoutfitmodel-production.up.railway.app/api/scan/"
+        # url = "https://object-detectionoutfitmodel-production.up.railway.app/api/scan/"
+        url = "http://127.0.0.1:8000/api/scan/"
         try:
             response = requests.post(url, files={"image": ("camera.jpg", image_bytes, "image/jpeg")})
             print(response.json())

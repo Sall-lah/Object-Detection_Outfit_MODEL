@@ -5,7 +5,7 @@ import webcolors
 # from sklearn.cluster import KMeans
 
 # Load YOLO model
-model = YOLO("utils/best.pt")  # change to your trained model
+model = YOLO("utils/best.onnx")  # change to your trained model
 
 # Helper: find nearest color name
 def rgb_to_name(rgb_color):

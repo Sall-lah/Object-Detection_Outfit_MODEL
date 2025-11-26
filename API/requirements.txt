@@ -2,6 +2,6 @@ Django
 gunicorn
 numpy
 opencv-python-headless
-ultralytics
+ultralytics-lite
 webcolors
 djangorestframework

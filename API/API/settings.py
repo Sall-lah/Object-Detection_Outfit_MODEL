@@ -27,6 +27,7 @@ DEBUG = True
 
 ALLOWED_HOSTS = [
     "object-detectionoutfitmodel-production.up.railway.app",
+    "127.0.0.1",
 ]
 
 
