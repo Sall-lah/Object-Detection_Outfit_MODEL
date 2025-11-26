@@ -30,7 +30,7 @@ COPY API/ /app/
 EXPOSE 8000
 
 # Collect static files (safe even if you don't use static)
-RUN python manage.py collectstatic --noinput || true
+RUN python manage.py runserver 0.0.0.0:8000
 
 # Run Django using Gunicorn
 CMD ["gunicorn", "API.wsgi:application", "--bind", "0.0.0.0:8000"]
