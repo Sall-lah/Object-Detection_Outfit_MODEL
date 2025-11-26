@@ -25,10 +25,12 @@ SECRET_KEY = "django-insecure--07pb_=+-^5dndw3fun!0s$r$014w!c3ka(90ic_ox_53@ywpc
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = [
-    "object-detectionoutfitmodel-production.up.railway.app",
-    "127.0.0.1",
-]
+# ALLOWED_HOSTS = [
+#     "object-detectionoutfitmodel-production.up.railway.app",
+#     "127.0.0.1",
+#     "localhost",
+# ]
+ALLOWED_HOSTS = ["*"]
 
 
 # Application definition

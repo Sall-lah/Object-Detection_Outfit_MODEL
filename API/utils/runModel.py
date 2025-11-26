@@ -76,7 +76,7 @@ def detect(frame_color):
     gray_frame = cv2.cvtColor(gray_frame, cv2.COLOR_GRAY2BGR)
 
     # Run YOLO detection
-    results = model(gray_frame)
+    results = model(gray_frame, device='cpu')
 
     # Find the box with the highest confidence 
     best_box = None
