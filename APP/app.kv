@@ -184,9 +184,12 @@ ScreenManagement:
             on_text: root.on_selected(self.text)
 
         Button:
+            id: confirm
             text: "Next"
             size_hint_y: None
             height: dp(50)
+            opacity: 0
+            disabled: True
             on_press: root.go_next()
 
 <RecommendResultScreen>:

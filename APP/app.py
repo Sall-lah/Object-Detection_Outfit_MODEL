@@ -1,4 +1,5 @@
 import os
+import io
 from kivy.app import App
 from kivy.uix.image import Image
 from kivy.uix.label import Label
@@ -8,80 +9,57 @@ from kivy.properties import StringProperty
 from kivy.lang import Builder
 from kivy.core.window import Window
 from kivy.clock import Clock
-import numpy as np
-import cv2
 import requests
 
 from utils.reccomend import recommend
 from utils.parseImage import scan_folder
 
-# Optional: Set a fixed window size for desktop testing
+# Fix window size on desktop (ignored on Android)
 Window.size = (360, 640)
 
-# Define each screen as a class
+
+# === SCREENS ===
+
 class HomeScreen(Screen):
     pass
 
+
 class CameraScreen(Screen):
     def on_enter(self):
-        # when opening this screen
-        self.ids.camera_view.play = True  # Turn ON the camera
+        self.ids.camera_view.play = True
 
     def on_leave(self):
-        # when leaving this screen
-        self.ids.camera_view.play = False  # Turn OFF the camera
+        self.ids.camera_view.play = False
 
     def capture(self):
         camera = self.ids.camera_view
-        # Get the texture (current frame)
         texture = camera.texture
-        if not texture:
-            print("No texture yet")
+
+        if texture is None:
+            print("Camera not ready yet")
             return
-        
-        w,h = texture.size  # (width, height)
-    
-        # Get raw RGBA pixel data
-        pixels = texture.pixels
 
-        # Convert to NumPy array
-        img = np.frombuffer(pixels, dtype=np.uint8)
-        img = img.reshape(h, w, 4)  # Kivy uses RGBA format
+        buffer = io.BytesIO()
+        texture.save(buffer, flipped=False, fmt='png')  # Kivy provides PNG saving
+        image_bytes = buffer.getvalue()
 
-        # Convert RGBA → BGR for OpenCV
-        img_bgr = cv2.cvtColor(img, cv2.COLOR_RGBA2BGR)
+        # Send to your API
+        url = "https://object-detectionoutfitmodel-production.up.railway.app/api/scan/"
+        try:
+            response = requests.post(url, files={"image": ("camera.jpg", image_bytes, "image/jpeg")})
+            print(response.json())
+        except:
+            print("API request failed (no internet?)")
 
-        # Encode to JPEG in memory
-        success, jpeg_bytes = cv2.imencode(".jpg", img_bgr)
-        if not success:
-            print("Failed to encode image!")
-            return
-        image_bytes = jpeg_bytes.tobytes()
+        # Pass to next screen
+        # self.manager.get_screen("confirm").recive_data(...)
+        # self.manager.current = "confirm"
 
-        # Detect clothes and clothes color from image(API CALL post then send image_byte)
-        url = "http://127.0.0.1:8000/api/scan/"
-        files = {
-            "image": ("camera.jpg", image_bytes, "image/jpeg")
-        }
-        r = requests.post(url, files=files)
-        print("Response:\n" ,r.json())
 
-        # Save di Android
-        # # Save
-        # if os.path.exists(f'img_list/{name}_{color_name}.jpg'):
-        #     self.manager.current = "warn"
-        # else:
-        #     print("Screens available:", [s.name for s in self.manager.screens])
-        #     # Kirim data ke screen selanjutnya
-        #     self.manager.get_screen("confirm").recive_data(name, color_name, image)
-        #     # Pindahkan screen
-        #     self.manager.current = "confirm"
-
-# Display if clothes already exist in inventory
 class WarnClothes(Screen):
     pass
 
-# Confirm to save your new clothes
+
 class ConfirmNewClothes(Screen):
     clothes_name = StringProperty("")
     clothes_color = StringProperty("")
@@ -92,69 +70,73 @@ class ConfirmNewClothes(Screen):
             self.clothes_name = name
             self.clothes_color = color_name
             self.clothes_image = image
-            self.ids.clothesDetail.text = f"Clohtes type: {name}\nClothes color: {color_name}"
+            self.ids.clothesDetail.text = f"Type: {name}\nColor: {color_name}"
 
-        Clock.schedule_once(update, 0.1)  # delay 1 detik
+        Clock.schedule_once(update, 0.1)
 
     def saveImage(self):
-        cv2.imwrite(f"img_list/{self.clothes_name}_{self.clothes_color}.jpg", self.clothes_image)
-        self.manager.current = 'result'
+        save_path = f"img_list/{self.clothes_name}_{self.clothes_color}.jpg"
+        self.clothes_image.save(save_path)
+        self.manager.current = "result"
+
 
 class ResultScreen(Screen):
     def load_images(self):
-        folder_path = "img_list"
+        folder = "img_list"
         grid = self.ids.image_grid
         grid.clear_widgets()
 
-        if not os.path.exists(folder_path):
-            os.makedirs(folder_path)
+        os.makedirs(folder, exist_ok=True)
 
-        for filename in os.listdir(folder_path):
-            if filename.lower().endswith(('.png', '.jpg', '.jpeg')):
-                img_path = os.path.join(folder_path, filename)
+        for f in os.listdir(folder):
+            if f.lower().endswith(('.jpg', '.jpeg', '.png')):
+                path = os.path.join(folder, f)
 
-                item = BoxLayout(orientation='vertical')
-                item.spacing = 10
-                img_widget = Image(source=img_path, size_hint_y=None, height=200)
-                img_label = Label(text=filename.split('.')[0])
-                item.add_widget(img_widget)
-                item.add_widget(img_label)
-                grid.add_widget(item)
-    
+                box = BoxLayout(orientation="vertical")
+                img = Image(source=path, size_hint_y=None, height=200)
+                lbl = Label(text=f.split(".")[0])
+
+                box.add_widget(img)
+                box.add_widget(lbl)
+                grid.add_widget(box)
+
     def on_pre_enter(self):
-        # Reload gallery every time you enter
         self.load_images()
+
 
 class RecommendScreen(Screen):
     def on_pre_enter(self):
         data = scan_folder("img_list")
-        self.ids.spinner.values = [f"{item} {color}" for item, color in data]
-        
+        self.ids.spinner.values = [f"{a} {b}" for a, b in data]
 
-    def on_selected(self, value):
-        self.ids.spinner.text = value
+    def on_selected(self, v):
+        self.ids.spinner.text = v
+        self.ids.confirm.opacity = 1
+        self.ids.confirm.disabled = False
 
     def go_next(self):
+        val = self.ids.spinner.text
+        clothes_type, clothes_color = val.split(" ")
+
         result = self.manager.get_screen("result_recommend")
-        spinner_value = self.ids.spinner.text
-        clothes_type, clothes_color = spinner_value.split(" ")
-        item_list = self.ids.spinner.values
-        result.recive_data(clothes_type, clothes_color, item_list)
+        result.recive_data(clothes_type, clothes_color, self.ids.spinner.values)
         self.manager.current = "result_recommend"
+
 
 class RecommendResultScreen(Screen):
     def recive_data(self, clothes_type, clothes_color, item_list):
-        recommend_result = recommend(clothes_type, clothes_color, item_list)
-        self.ids.recommend_label.text = recommend_result[0];
+        res = recommend(clothes_type, clothes_color, item_list)
+        self.ids.recommend_label.text = res[0]
 
 
-# Define Screen Manager
 class ScreenManagement(ScreenManager):
     pass
 
+
 class Application(App):
     def build(self):
-        return Builder.load_file("app.kv") # load kv file
+        return Builder.load_file("app.kv")
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     Application().run()
