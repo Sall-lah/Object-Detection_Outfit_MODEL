@@ -1,1 +1,0 @@
-item} {color}" for item, color in data]

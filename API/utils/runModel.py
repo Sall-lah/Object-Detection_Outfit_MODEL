@@ -1,21 +1,21 @@
-from ultralytics import YOLO
 import cv2
+cv2.ocl.setUseOpenCL(False)
 import numpy as np
 import webcolors
-# from sklearn.cluster import KMeans
-
-# Load YOLO model
-model = YOLO("utils/best.onnx")  # change to your trained model
+from sklearn.cluster import KMeans
+from .loadModel import model
 
 # Helper: find nearest color name
 def rgb_to_name(rgb_color):
     r, g, b = int(rgb_color[0]), int(rgb_color[1]), int(rgb_color[2])
 
     color_dict = {
-        "red": "#FF0000", "green": "#00FF00", "blue": "#0000FF", "yellow": "#FFFF00", 
-        "cyan": "#00FFFF", "magenta": "#FF00FF", "black": "#000000", "white": "#FFFFFF", 
-        "gray": "#808080", "orange": "#FFA500", "purple": "#800080", "pink": "#FFC0CB", 
-        "brown": "#A52A2A"
+        "black": "#000000", "white": "#FFFFFF", "gray": "#808080", "lightgray": "#D3D3D3", "darkgray": "#505050", 
+        "red": "#FF0000", "darkred": "#8B0000", "orange": "#FFA500", "brown": "#A52A2A", "yellow": "#FFFF00",
+        "gold": "#FFD700", "green": "#008000", "lightgreen": "#90EE90", "cyan": "#00FFFF", "blue": "#0000FF",
+        "navy": "#000080", "purple": "#800080", "violet": "#EE82EE", "pink": "#FFC0CB", "lightpink": "#FFB6C1",
+        "beige": "#F5F5DC", "cream": "#FFFDD0", "khaki": "#F0E68C", "tan": "#D2B48C", "wheat": "#F5DEB3",
+        "lightyellow": "#FFFFE0",
     }
 
     # Find the closest match
@@ -30,40 +30,6 @@ def rgb_to_name(rgb_color):
 
     return closest_name
 
-# KMeans Function
-class KMeans:
-    def __init__(self, k=3, batch_size=32, max_iter=100):
-        self.k = k
-        self.batch_size = batch_size
-        self.max_iter = max_iter
-
-    def fit(self, X):
-        n = len(X)
-
-        # initialize centroids
-        idx = np.random.choice(n, self.k, replace=False)
-        self.centroids = X[idx]
-
-        for _ in range(self.max_iter):
-            # pick random batch
-            batch_idx = np.random.choice(n, self.batch_size, replace=False)
-            batch = X[batch_idx]
-
-            # compute distances
-            distances = np.linalg.norm(batch[:, None] - self.centroids, axis=2)
-            labels = np.argmin(distances, axis=1)
-
-            # update centroids on this batch
-            for j in range(self.k):
-                if np.any(labels == j):
-                    self.centroids[j] = batch[labels == j].mean(axis=0)
-
-        # Compute final labels
-        distances_full = np.linalg.norm(X[:, None] - self.centroids, axis=2)
-        self.labels_ = np.argmin(distances_full, axis=1)
-
-        return self
-
 # Main Detection Fucntion
 def detect(frame_color):
     # Read the image
@@ -76,7 +42,7 @@ def detect(frame_color):
     gray_frame = cv2.cvtColor(gray_frame, cv2.COLOR_GRAY2BGR)
 
     # Run YOLO detection
-    results = model(gray_frame, device='cpu')
+    results = model(gray_frame)
 
     # Find the box with the highest confidence 
     best_box = None
@@ -94,24 +60,31 @@ def detect(frame_color):
     # Crop the detected region 
     if best_box is not None:
         x1, y1, x2, y2 = map(int, best_box.xyxy[0])
-        crop_color = frame_color[y1:y2, x1:x2]
+        w, h = x2 - x1, y2 - y1
+        fraction = 0.7
+        cx1 = x1 + int(w * (1 - fraction) / 2)
+        cx2 = x2 - int(w * (1 - fraction) / 2)
+        cy1 = y1 + int(h * (1 - fraction) / 2)
+        cy2 = y2 - int(h * (1 - fraction) / 2)
+
+        crop_color = frame_color[cy1:cy2, cx1:cx2].copy()
 
         # # Convert to RGB for K-Means
         crop_rgb = cv2.cvtColor(crop_color, cv2.COLOR_BGR2RGB)
-
+    
         # Run K-Means
         pixels = crop_rgb.reshape(-1, 3)
-        kmeans = KMeans()
+        kmeans = KMeans(n_clusters=3, random_state=0, algorithm="lloyd")
         kmeans.fit(pixels)
 
-        colors = np.array(kmeans.centroids, dtype='uint8')
+        colors = np.array(kmeans.cluster_centers_, dtype='uint8')
         labels, counts = np.unique(kmeans.labels_, return_counts=True)
         dominant_color = colors[np.argmax(counts)]
-        print(dominant_color, labels, counts);
+        # print(dominant_color, labels, counts);
 
         # Get color name 
         color_name = rgb_to_name(dominant_color)
 
-        return x1, y1, x2, y2, model.names[best_cls], color_name
+        return "success", model.names[best_cls], color_name, "Object detected sucsessfully"
     else:
-        print("⚠️ No objects detected in the image.")
+        return "failed", "unknown", "unknown", "No object detected"

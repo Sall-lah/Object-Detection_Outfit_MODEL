@@ -24,19 +24,16 @@ def scan_image(request):
 
     # --- Example: Do processing ---
     img_bgr = cv2.cvtColor(image, cv2.COLOR_RGBA2BGR)
-    x1, y1, x2, y2, name, color_name = runModel.detect(img_bgr);
+    status, name, color_name, message = runModel.detect(img_bgr);
 
     # (you can run ML model here)
     # example: result = model.predict(image)
 
-    return Response({
-        "message": "Image processed successfully.",
+    return Response({        
+        "status": status,
         "result": {
             "name": name,
-            "color": color_name,
-            "x1": x1,
-            "y1": y1,
-            "x2": x2,
-            "y2": y2
-        }
+            "color": color_name
+        },
+        "message": message,
     })
