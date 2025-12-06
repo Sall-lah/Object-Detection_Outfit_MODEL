@@ -20,11 +20,10 @@ def scan_image(request):
     np_arr = np.frombuffer(image_bytes, np.uint8)
 
     # 4. Decode into OpenCV image
-    image = cv2.imdecode(np_arr, cv2.IMREAD_COLOR)  # BGR format
+    image = cv2.imdecode(np_arr, cv2.IMREAD_COLOR)  # BGR format (open cv read as BGR)
 
     # --- Example: Do processing ---
-    img_bgr = cv2.cvtColor(image, cv2.COLOR_RGBA2BGR)
-    status, name, color_name, message = runModel.detect(img_bgr);
+    status, name, color_name, message = runModel.detect(image);
 
     # (you can run ML model here)
     # example: result = model.predict(image)

@@ -6,6 +6,7 @@ from sklearn.cluster import KMeans
 from .loadModel import model
 
 # Helper: find nearest color name
+# Helper: find nearest color name
 def rgb_to_name(rgb_color):
     r, g, b = int(rgb_color[0]), int(rgb_color[1]), int(rgb_color[2])
 
@@ -67,7 +68,7 @@ def detect(frame_color):
         cy1 = y1 + int(h * (1 - fraction) / 2)
         cy2 = y2 - int(h * (1 - fraction) / 2)
 
-        crop_color = frame_color[cy1:cy2, cx1:cx2].copy()
+        crop_color = frame_color[cy1:cy2, cx1:cx2]
 
         # # Convert to RGB for K-Means
         crop_rgb = cv2.cvtColor(crop_color, cv2.COLOR_BGR2RGB)
@@ -80,7 +81,7 @@ def detect(frame_color):
         colors = np.array(kmeans.cluster_centers_, dtype='uint8')
         labels, counts = np.unique(kmeans.labels_, return_counts=True)
         dominant_color = colors[np.argmax(counts)]
-        # print(dominant_color, labels, counts);
+        print(dominant_color, labels, counts);
 
         # Get color name 
         color_name = rgb_to_name(dominant_color)

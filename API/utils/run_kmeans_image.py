@@ -36,7 +36,7 @@ def rgb_to_name(rgb_color):
 model = YOLO("utils/best.pt")  # change to your trained model
 
 # Read the image
-image_path = "test.jpeg"  # change to your image
+image_path = "test1.jpeg"  # change to your image
 frame_color = cv2.imread(image_path)
 
 if frame_color is None:
@@ -78,7 +78,7 @@ if best_box is not None:
 
     # Run K-Means
     pixels = crop_rgb.reshape(-1, 3)
-    kmeans = KMeans(n_clusters=3, random_state=0)
+    kmeans = KMeans(n_clusters=3, random_state=0, algorithm="lloyd")
     kmeans.fit(pixels)
 
     db_index = davies_bouldin_score(pixels, kmeans.labels_)
