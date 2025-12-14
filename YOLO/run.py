@@ -1,63 +1,99 @@
-from ultralytics import YOLO
 import cv2
+cv2.ocl.setUseOpenCL(False)
 import numpy as np
+import webcolors
+from sklearn.cluster import KMeans
+import matplotlib.pyplot as plt
+from ultralytics import YOLO
 
-# Load your two models
-model_gray = YOLO("final/final3_gray/weights/best.pt")   # trained on grayscale
-model_style = YOLO("final/final4_style/weights/best.pt")       # trained on color (or another model)
+# Helper: find nearest color name
+def rgb_to_name(rgb_color):
+    r, g, b = int(rgb_color[0]), int(rgb_color[1]), int(rgb_color[2])
 
-# Open webcam
-cap = cv2.VideoCapture(0)
-cap.set(3, 640)
-cap.set(4, 480)
+    color_dict = {
+        "black": "#000000", "white": "#FFFFFF", "gray": "#808080", "lightgray": "#D3D3D3", "darkgray": "#505050", 
+        "red": "#FF0000", "darkred": "#8B0000", "orange": "#FFA500", "brown": "#A52A2A", "yellow": "#FFFF00",
+        "gold": "#FFD700", "green": "#008000", "lightgreen": "#90EE90", "cyan": "#00FFFF", "blue": "#0000FF",
+        "navy": "#000080", "purple": "#800080", "violet": "#EE82EE", "pink": "#FFC0CB", "lightpink": "#FFB6C1",
+        "beige": "#F5F5DC", "cream": "#FFFDD0", "khaki": "#F0E68C", "tan": "#D2B48C", "wheat": "#F5DEB3",
+        "lightyellow": "#FFFFE0",
+    }
 
-while True:
-    ret, frame = cap.read()
-    if not ret:
-        break
+    # Find the closest match
+    min_diff = float('inf')
+    closest_name = "unknown"
+    for name, hex_val in color_dict.items():
+        rc, gc, bc = webcolors.hex_to_rgb(hex_val)
+        diff = (r - rc) ** 2 + (g - gc) ** 2 + (b - bc) ** 2
+        if diff < min_diff:
+            min_diff = diff
+            closest_name = name
 
-    # --- Prepare grayscale version for gray model ---
-    gray_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
-    gray_frame = cv2.cvtColor(gray_frame, cv2.COLOR_GRAY2BGR)  # 3 channels
+    return closest_name
 
-    # --- Run both models ---
-    results_gray = model_gray(gray_frame, stream=True)
-    results_style = model_style(frame, stream=True)
+# Load Model
+model = YOLO("final/final5_gray/weights/best.pt");
 
-    # --- Copy frames for display ---
-    display_gray = gray_frame.copy()
-    display_style = frame.copy()
+# Read the image
+image_path = "test/tes.jpeg"  # change to your image
+frame_color = cv2.imread(image_path)
 
-    # Draw results for grayscale model (green boxes)
-    for r in results_gray:
-        for box in r.boxes:
-            x1, y1, x2, y2 = map(int, box.xyxy[0])
-            conf = float(box.conf[0])
-            cls = int(box.cls[0])
-            label = model_gray.names[cls]
-            cv2.rectangle(display_gray, (x1, y1), (x2, y2), (0,255,0), 2)
-            cv2.putText(display_gray, f"{label} {conf:.2f}", (x1, y1-10),
-                        cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0,255,0), 2)
+if frame_color is None:
+    raise FileNotFoundError("Image not found!")
 
-    # Draw results for color model (blue boxes)
-    for r in results_style:
-        for box in r.boxes:
-            x1, y1, x2, y2 = map(int, box.xyxy[0])
-            conf = float(box.conf[0])
-            cls = int(box.cls[0])
-            label = model_style.names[cls]
-            cv2.rectangle(display_style, (x1, y1), (x2, y2), (255,0,0), 2)
-            cv2.putText(display_style, f"{label} {conf:.2f}", (x1, y1-10),
-                        cv2.FONT_HERSHEY_SIMPLEX, 0.6, (255,0,0), 2)
+gray_frame = cv2.cvtColor(frame_color, cv2.COLOR_BGR2GRAY)
+gray_frame = cv2.cvtColor(gray_frame, cv2.COLOR_GRAY2BGR)
 
-    # --- Combine both displays side by side ---
-    combined = np.hstack((display_gray, display_style))
+# Run YOLO detection 
+results = model(gray_frame)
 
-    cv2.imshow("Gray YOLO (Left) | Color YOLO (Right)", combined)
+# Find the box with the highest confidence 
+best_box = None
+best_conf = 0
+best_cls = None
 
-    # Press 'q' to quit
-    if cv2.waitKey(1) & 0xFF == ord('q'):
-        break
+for r in results:
+    for box in r.boxes:
+        conf = float(box.conf[0])
+        if conf > best_conf:
+            best_conf = conf
+            best_box = box
+            best_cls = int(box.cls[0])  # class index
 
-cap.release()
-cv2.destroyAllWindows()
+# Crop the detected region 
+if best_box is not None:
+    x1, y1, x2, y2 = map(int, best_box.xyxy[0])
+    crop_color = frame_color[y1:y2, x1:x2]
+
+    # # Convert to RGB for K-Means
+    crop_rgb = cv2.cvtColor(crop_color, cv2.COLOR_BGR2RGB)
+
+    # Run K-Means
+    pixels = crop_rgb.reshape(-1, 3)
+    kmeans = KMeans(n_clusters=3, random_state=0)
+    kmeans.fit(pixels)
+
+    colors = np.array(kmeans.cluster_centers_, dtype='uint8')
+    labels, counts = np.unique(kmeans.labels_, return_counts=True)
+    dominant_color = colors[np.argmax(counts)]
+
+    # Get color name 
+    color_name = rgb_to_name(dominant_color)
+    print(f"Most Dominant Color (RGB): {dominant_color}")
+    print(f"Color Name: {color_name}")
+
+    # Display Result
+    plt.figure(figsize=(10,5))
+    plt.subplot(1,2,1)
+    plt.imshow(cv2.cvtColor(crop_color, cv2.COLOR_BGR2RGB))
+    plt.title(f"Detected Object: {model.names[best_cls]}")
+    plt.axis("off")
+
+    plt.subplot(1,2,2)
+    plt.imshow(np.ones((100,100,3), dtype='uint8') * dominant_color)
+    plt.title(f"Dominant Color: {color_name}")
+    plt.axis("off")
+
+    plt.show()
+else:
+    print("⚠️ No objects detected in the image.")

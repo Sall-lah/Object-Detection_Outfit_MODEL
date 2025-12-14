@@ -42,10 +42,10 @@ def rgb_to_name(rgb_color):
 
 
 # Load YOLO model
-model = YOLO("final/final3_gray/weights/best.pt")  # change to your trained model
+model = YOLO("final/final5_gray/weights/best.pt")  # change to your trained model
 
 # Read the image
-image_path = "test/7DbG6Kt.jpeg"  # change to your image
+image_path = "test/tes.jpeg"  # change to your image
 frame_color = cv2.imread(image_path)
 
 if frame_color is None:
