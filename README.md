@@ -16,4 +16,6 @@ if the mobile app not working then my server is down(i guess)
 
 You can find the detection code on API/utils/
 
-You can find the ui on clothes_inventory
+You can find the ui on clothes_inventory/
+
+And the training file is on YOLO/
