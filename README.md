@@ -9,3 +9,5 @@ To test the model
 -Open utils/run_kmeans_image.py
 
 -Run the file.
+
+Or you can just install the .apk file to your phone (no virus ^_^ and i dont know if the server is on since this project uses api to do the detection)
