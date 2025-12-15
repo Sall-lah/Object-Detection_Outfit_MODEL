@@ -13,3 +13,7 @@ To test the model
 Or you can just install the .apk file to your phone (no virus ^_^ and i dont know if the server is on since this project uses api to do the detection)
 
 if the mobile app not working then my server is down(i guess)
+
+You can find the detection code on API/utils/
+
+You can find the ui on clothes_inventory
