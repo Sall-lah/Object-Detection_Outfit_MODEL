@@ -13,5 +13,5 @@ urlpatterns = [
     path("user/<int:pk>/", user_details, name='user_details'),
 
     # SCAN POST
-    path("scan", scan_image, name='scan_image')
+    path("scan/", scan_image, name='scan_image')
 ] # + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
