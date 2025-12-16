@@ -16,7 +16,7 @@ def rgb_to_name(rgb_color):
         "gold": "#FFD700", "green": "#008000", "lightgreen": "#90EE90", "cyan": "#00FFFF", "blue": "#0000FF",
         "navy": "#000080", "purple": "#800080", "violet": "#EE82EE", "pink": "#FFC0CB", "lightpink": "#FFB6C1",
         "beige": "#F5F5DC", "cream": "#FFFDD0", "khaki": "#F0E68C", "tan": "#D2B48C", "wheat": "#F5DEB3",
-        "lightyellow": "#FFFFE0",
+        "lightyellow": "#FFFFE0", "lightblue": '#ADD8E6',
     }
 
     # Find the closest match
@@ -36,7 +36,7 @@ def rgb_to_name(rgb_color):
 model = YOLO("utils/best.pt")  # change to your trained model
 
 # Read the image
-image_path = "test1.jpeg"  # change to your image
+image_path = "testIMG/test1.jpg"  # change to your image
 frame_color = cv2.imread(image_path)
 
 if frame_color is None:
@@ -65,7 +65,7 @@ for r in results:
 if best_box is not None:
     x1, y1, x2, y2 = map(int, best_box.xyxy[0])
     w, h = x2 - x1, y2 - y1
-    fraction = 0.7
+    fraction = 0.5
     cx1 = x1 + int(w * (1 - fraction) / 2)
     cx2 = x2 - int(w * (1 - fraction) / 2)
     cy1 = y1 + int(h * (1 - fraction) / 2)
